@@ -1,0 +1,471 @@
+:root {
+  --ink: #2b2519;
+  --soft: #5c5340;
+  --gold: #b8860b;
+  /* --gold on --card is 3.21:1 — under the 4.5:1 WCAG AA needs for normal text,
+     and the gold is used for the live numeric readouts (13px) and mark indices
+     (9px). This darker tone is 5.25:1. Borders, accent-color and the ▸ marker
+     keep --gold: they are not text and carry no contrast requirement. */
+  --gold-text: #8a6508;
+  --red: #c0392b;
+  --paper: #fbf7ef;
+  --line: #e3d9c4;
+  --card: #fffdf8;
+  --bg: #f1ead9;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Visually hidden but still focusable and still in the accessibility tree.
+   NOT `hidden`/`display:none` — those drop the element out of the tab order,
+   which is exactly what made the file input keyboard-dead. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The stage swaps its two children with `hidden`; .stage is a flex container,
+   so make sure nothing out-specifies the UA's display:none. */
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Georgia, "Iowan Old Style", serif;
+}
+
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+header h1 {
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 0.02em;
+}
+/* pushes the Help chip to the far end of the header */
+.header-spacer {
+  flex: 1;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drop {
+  /* contains the .sr-only file input, so focusing it can't scroll to origin */
+  position: relative;
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  text-align: center;
+  background: var(--card);
+  color: var(--soft);
+  transition: border-color 0.15s, background 0.15s;
+}
+/* Padding lives on the label, not the box, so the whole dashed area is the
+   click target now that the label (not a div's onClick) opens the picker. */
+.drop label {
+  display: block;
+  padding: 22px 16px;
+  cursor: pointer;
+}
+.drop:hover,
+.drop-active {
+  border-color: var(--gold);
+  background: #fff;
+}
+.drop strong {
+  color: var(--ink);
+}
+.drop-file {
+  display: block;
+  margin-top: 4px;
+}
+.drop-thumb {
+  display: block;
+  margin: 0 auto 10px;
+  max-width: 72px;
+  max-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+/* The focus ring belongs on the visible box, not on a 1px clipped input.
+   Adjacent sibling rather than :has() — the label is always the input's next
+   sibling, and this needs no modern-selector support. */
+.drop input:focus-visible + label {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+.modes,
+.export {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.chip:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+.chip-on {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.control-label {
+  font-size: 13px;
+  font-weight: bold;
+}
+.control-label em {
+  color: var(--gold-text);
+  font-style: normal;
+  font-weight: normal;
+}
+.control-hint {
+  font-size: 11px;
+  color: var(--soft);
+}
+.control input[type="range"] {
+  width: 100%;
+  accent-color: var(--gold);
+}
+.control textarea,
+.control select,
+.control input[type="text"] {
+  font-family: Georgia, serif;
+  font-size: 13px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  resize: vertical;
+}
+.control select {
+  padding: 6px 8px;
+}
+
+.marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  max-height: 190px;
+  overflow-y: auto;
+}
+.mark {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+.mark em {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  font-size: 9px;
+  font-style: normal;
+  color: var(--gold-text);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+}
+.group > summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--soft);
+  list-style: none;
+}
+.group > summary::-webkit-details-marker {
+  display: none;
+}
+.group > summary::before {
+  content: "▸ ";
+  color: var(--gold);
+}
+.group[open] > summary::before {
+  content: "▾ ";
+}
+.group-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 12px 14px;
+}
+
+/* Used both as `control control-inline` and standalone inside a .control that
+   stacks the hint underneath, so it carries its own display. */
+.control-inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.control-inline input[type="color"] {
+  width: 34px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: none;
+}
+.control-inline input[type="checkbox"] {
+  accent-color: var(--gold);
+}
+
+.status {
+  font-size: 12px;
+  color: var(--soft);
+  min-height: 1em;
+  margin: 0;
+}
+/* The live regions stay mounted with empty content so announcements fire; don't
+   let an empty one reserve a blank line. */
+.status:empty {
+  min-height: 0;
+  margin: 0;
+}
+.err {
+  color: var(--red);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 12px;
+  color: var(--soft);
+}
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.performance-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 8px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: rgba(184, 134, 11, 0.1);
+  font-size: 12px;
+  color: var(--gold-text);
+}
+
+.error-details {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid var(--red);
+  border-radius: 4px;
+  background: rgba(192, 57, 43, 0.1);
+}
+.error-summary {
+  font-weight: bold;
+  cursor: pointer;
+}
+.error-pre {
+  margin: 8px 0 0;
+  padding: 8px;
+  background: var(--paper);
+  border-radius: 4px;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+.stage {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* The stage holds both the render and the help panel; whichever is showing
+   should fill it, and the flex centring above should not squash either. */
+.stage > * {
+  width: 100%;
+}
+
+.help {
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.help:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+.help h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.help > p {
+  margin: 0 0 16px;
+  color: var(--soft);
+}
+.help .group-body > p {
+  margin: 0 0 10px;
+}
+.help .group-body > p:last-child {
+  margin-bottom: 0;
+}
+.help dl {
+  margin: 0;
+}
+.help dt {
+  font-weight: bold;
+  margin-top: 10px;
+}
+.help dt:first-child {
+  margin-top: 0;
+}
+.help dd {
+  margin: 2px 0 0;
+  color: var(--soft);
+}
+.help kbd {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.preview {
+  width: 100%;
+}
+.preview svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.stage-render {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* The tour's caption. Sits above the drawing so the picture stays put as the
+   text under it changes length. */
+.tour {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.tour b {
+  font-size: 15px;
+  font-weight: bold;
+}
+.tour span {
+  color: var(--soft);
+  font-size: 13px;
+  flex: 1 1 16ch;
+}
+.tour i {
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gold-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  color: var(--soft);
+  font-style: italic;
+  /* The stage's two children are now wrappers that fill it, so this text is no
+     longer a flex item being centred by .stage — it centres itself. */
+  text-align: center;
+}

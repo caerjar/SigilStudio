@@ -1,0 +1,9 @@
+# The Dockerfile does `COPY . .`; without this the whole of node_modules and
+# dist ships to the daemon as build context on every `make dev`.
+node_modules/
+dist/
+.git/
+.github/
+*.local
+.DS_Store
+.vite/

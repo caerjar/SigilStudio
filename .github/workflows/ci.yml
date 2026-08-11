@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to the same ref makes the in-flight run redundant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # matches the Dockerfile's node:22-alpine
+          cache: npm
+
+      # `npm ci` rather than `npm install`: the lockfile is the pin, per the
+      # project convention that deps are pinned by the committed lockfile.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck # make typecheck
+        run: npm run typecheck
+
+      - name: Test # make test
+        run: npm test
+
+      - name: Build # make build
+        run: npm run build
+
+  # Publishes https://caerjar.github.io/SigilStudio/ — gated on the job above, so
+  # a red build never reaches the site. Only from main; PRs validate but never
+  # deploy.
+  deploy:
+    needs: typecheck-test-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write # deploy-pages authenticates by OIDC, not a stored token
+
+    # Deliberately NOT cancel-in-progress, unlike the CI group above: cancelling
+    # a half-finished Pages deploy is how you get a partially published site.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # vite.config.ts uses a relative base, so this artifact is not tied to the
+      # subpath and the same dist/ would work at a domain root too.
+      - run: npm run build
+
+      # Static-host SPA fallback: any unknown path serves the app instead of the
+      # host's 404. Nothing deep-links today (there is no router), but this is
+      # one line and is the thing everyone forgets when routing arrives.
+      - name: SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

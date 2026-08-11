@@ -1,0 +1,18 @@
+# Three Musketeers: `make dev` -> compose -> container. Everything client-side;
+# the container only serves the Vite dev bundle. Bound to 127.0.0.1 on the host.
+#
+# PORT overrides both sides of the mapping at once — host and container must
+# match, because vite.config.ts reads the same variable inside the container.
+# Mapping a host port to a different container port would just 502.
+services:
+  dev:
+    build: .
+    command: npm run dev
+    ports:
+      - "127.0.0.1:${PORT:-5180}:${PORT:-5180}"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - PORT
