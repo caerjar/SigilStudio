@@ -31,7 +31,7 @@ export interface Control {
 
 const num = (v: CtrlValue) => Number(v);
 
-export const CONTROLS = [
+export const CONTROLS: Control[] = [
   // ---------------- General (essential controls only) ----------------
   {
     id: "detail",
